@@ -60,6 +60,7 @@ void render_exterior_landmarks(cv::Mat &img, const dlib::full_object_detection& 
 }
 
 void render_turd_on_forehead(cv::Mat &img, cv::Mat &sprite, const dlib::full_object_detection& d){
+
     cv::Point rightEyebrow(d.part(17).x(),d.part(17).y());
     cv::Point leftEyebrow(d.part(22).x(),d.part(22).y());
 
@@ -69,11 +70,19 @@ void render_turd_on_forehead(cv::Mat &img, cv::Mat &sprite, const dlib::full_obj
     cv::Mat small;
 
     cv::Rect roi( cv::Point( rightEyebrow.x, rightEyebrow.y-h ), cv::Size( w, h ));
-    cv::resize(sprite,small,roi.size());
 
-    cv::Mat imageROI= img(Rect(rightEyebrow.x,rightEyebrow.y-h,w,h));
-    cv::addWeighted(imageROI,1.0,small,1.0,0.,imageROI);
-    //small.copyTo(imageROI);
+    if(
+      roi.x>0 &&
+      roi.y>0 &&
+      roi.x + roi.width < img.cols &&
+      roi.x + roi.width < img.rows)
+    {
+        cv::resize(sprite,small,roi.size());
+
+        cv::Mat imageROI= img(Rect(rightEyebrow.x,rightEyebrow.y-h,w,h));
+        cv::addWeighted(imageROI,1.0,small,1.0,0.,imageROI);
+        //small.copyTo(imageROI);
+    }
 
 }
 
@@ -125,8 +134,10 @@ int main(int argc, char *argv[])
 
                 render_exterior_landmarks(temp,shapes,0,26);
                 render_turd_on_forehead(temp,turd,shapes);
-                imshow("w",temp);
-                if(waitKey(30) >= 0) {break;}
+            }
+            imshow("w",temp);
+            if(waitKey(30) >= 0) {
+                break;
             }
         }
     }
