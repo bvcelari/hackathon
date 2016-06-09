@@ -45,29 +45,6 @@ using namespace std;
 using namespace cv;
 
 
-string type2str(int type) {
-  string r;
-
-  uchar depth = type & CV_MAT_DEPTH_MASK;
-  uchar chans = 1 + (type >> CV_CN_SHIFT);
-
-  switch ( depth ) {
-    case CV_8U:  r = "8U"; break;
-    case CV_8S:  r = "8S"; break;
-    case CV_16U: r = "16U"; break;
-    case CV_16S: r = "16S"; break;
-    case CV_32S: r = "32S"; break;
-    case CV_32F: r = "32F"; break;
-    case CV_64F: r = "64F"; break;
-    default:     r = "User"; break;
-  }
-
-  r += "C";
-  r += (chans+'0');
-
-  return r;
-}
-
 void render_exterior_landmarks(cv::Mat &img, const dlib::full_object_detection& d, const int start, const int end)
 {
     std::vector<cv::Point> points;
@@ -95,12 +72,13 @@ void render_turd_on_forehead(cv::Mat &img, cv::Mat &sprite, const dlib::full_obj
     cv::resize(sprite,small,roi.size());
 
     cv::Mat imageROI= img(Rect(rightEyebrow.x,rightEyebrow.y-h,w,h));
-    cv::addWeighted(imageROI,1.0,small,0.8,0.,imageROI);
+    cv::addWeighted(imageROI,1.0,small,1.0,0.,imageROI);
+    //small.copyTo(imageROI);
 
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
     try
     {
@@ -115,16 +93,26 @@ int main()
         // Load face detection and pose estimation models.
         frontal_face_detector detector = get_frontal_face_detector();
         shape_predictor pose_model;
-        deserialize("shape_predictor_68_face_landmarks.dat") >> pose_model;
+        std::string model("shape_predictor_68_face_landmarks.dat");
+        std::string turdFilename("turd.png");
+
+        if(argc > 2){
+            model=argv[1];
+            turdFilename = argv[2];
+        } else {
+            cout<<"      Remember usage with custom files is: "<<endl;
+            cout<<"               ./webcam [dlib_model] [image]"<<endl;
+        }
+
+        deserialize(model) >> pose_model;
         cv::Mat turd;
-        turd= imread("turd.png");
+        turd= imread(turdFilename);
 
         while(true)
         {
             // Grab a frame
             cv::Mat tempBig, temp;
             cap >> tempBig;
-
 
             cv::resize(tempBig, temp, cv::Size(), 1.0/1.0, 1.0/1.0);
             cv_image<bgr_pixel> cimg(temp);
@@ -133,9 +121,6 @@ int main()
             std::vector<dlib::rectangle> faces = detector(cimg);
 
             if (faces.size()>0) {
-                dlib::rectangle mainBBox = faces[0];
-                cv::Rect cvBBox = d2cv_Rect(mainBBox);
-
                 full_object_detection shapes = pose_model(cimg, faces[0]);
 
                 render_exterior_landmarks(temp,shapes,0,26);
