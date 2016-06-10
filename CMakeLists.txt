@@ -10,6 +10,9 @@ PROJECT(testDlib)
 
 include("$ENV{DLIB}/dlib/cmake")
 
+file(COPY "${CMAKE_SOURCE_DIR}/turd.png" DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY "${CMAKE_SOURCE_DIR}/shape_predictor_68_face_landmarks.dat" DESTINATION ${CMAKE_BINARY_DIR}/)
+
 # Tell CMake to compile a program.  We do this with the ADD_EXECUTABLE()
 # statement which takes the name of the output executable and then a list of
 # .cpp files to compile.  Here each example consists of only one .cpp file but
